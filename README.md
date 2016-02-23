@@ -1,9 +1,9 @@
 # Graph Visualizations
 Visualizations of breadth first and depth first searches
 
-Code written by Lee Cattarin\n
-gradientLine function written by Processing forums user @asimes and found here:\n
-https://forum.processing.org/two/discussion/5620/how-to-draw-a-gradient-colored-line\n
+Code written by Lee Cattarin<br>
+gradientLine function written by Processing forums user @asimes and found here:<br>
+https://forum.processing.org/two/discussion/5620/how-to-draw-a-gradient-colored-line<br>
 
 Files:
 || graph.pde, the main code

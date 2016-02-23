@@ -9,8 +9,6 @@ int desC = 0;  // counter so that the graph draws itself slowly over time
 int srC = 0;
 boolean drawn = false;
 
-color a, b;
-
 node [] nodes = new node[n];
 
 boolean drawGraph = false;
@@ -18,6 +16,7 @@ boolean DFS = true;
 boolean BFS = false;
 
 ArrayList<Integer> path = new ArrayList<Integer>();
+boolean [] visited = new boolean[n];
 
 void setup() {
   size(800, 800);
@@ -29,6 +28,7 @@ void setup() {
     c = color(int(random(50,256)), int(random(50,256)), int(random(50,256)));
     coord = new point( int(random(width)), int(random(height)) );
     nodes[i] = new node(i, c, coord); // creates arraylist of nodes
+    visited[i] = false;
   }
   
   for (int i=0; i<n; i++) {
@@ -40,59 +40,97 @@ void setup() {
       }  
     }
   }
-  
 }
 
 void draw() { 
+/*
+              ### DRAW GRAPH ###
+*/
   if (drawGraph) {
-    if (desC < n && !drawn) { // drawing the nodes first loop through
+    if (desC < n && !drawn) {
+      // drawing the nodes first loop through
       nodes[desC].draw();
       desC++;
-    } /*else if (srC == n) {
-      background(0);
-      stroke(255);
-      for (int i=0; i<n; i++) {
-        nodes[i].draw();
-        for (int j=i+1; j<n; j++) {
-          if (nodes[i].checkEdge(desC)) {
-            line( ( nodes[i].getPoint() ).x, ( nodes[i].getPoint() ).y,
-                    ( nodes[j].getPoint() ).x, ( nodes[j].getPoint() ).y);
-          }
-        }
-      }
-    } else if (srC > n) {
-      println("Done");
-    } */else if (desC < n && drawn) { // changing the destination node
+    } else if (srC >= n) {
+      drawGraph = false;
+      DFS = true;
+    } else if (desC < n && drawn) {
+      // changing the destination node
       if (nodes[srC].checkEdge(desC)) {
-        a = nodes[srC].getColor();
-        b = nodes[desC].getColor();
-        
         gradientLine( ( nodes[srC].getPoint() ).x, ( nodes[srC].getPoint() ).y,
-                ( nodes[desC].getPoint() ).x, ( nodes[desC].getPoint() ).y, a, b);
+                ( nodes[desC].getPoint() ).x, ( nodes[desC].getPoint() ).y,
+                nodes[srC].getColor(), nodes[desC].getColor() );
         
         desC++;
       } else {
+        // incrementing the counter so one line is drawn per frame
         while (!nodes[srC].checkEdge(desC) && desC < n) {
           desC++;
         }
       }
-    } else if (desC == n) { // changing the source node
+    } else if (desC == n) {
+      // changing the source node
+      srC++;
       if (!drawn) {
         drawn = true;
+        srC = 0;
       }
-      srC++;
       desC = srC + 1;
     }
-  } else if (DFS) {
-    if (path.size() == 0) {
-      srC = 0;
-      path.add(0);
-    } else {
-      
+  }
+/*
+              ### DEPTH FIRST SEARCH ###
+*/
+  if (DFS) {
+    if (DFSSTART) {
+      stroke(0, 0, 0, 180);
+      fill(0, 0, 0, 180);
+      rect(0, 0, width, height);
+      DFSSTART = false;
     }
-      
-      
-  } else if (BFS) {
+    if (path.size() == 0) {
+      // starting the path (either first time initialization or moving to a new connected component)
+      for (int i=0; i<n; i++) {
+        if (visited[i] == false) {
+          srC = i;
+        }
+      }
+      desC = 0;
+      path.add(srC);
+      visited[srC] = true;
+      nodes[srC].draw();
+    } else if (desC >= n) {
+      // back up the path
+      if (path.size() >= 2) {
+        desC = 0;
+        srC = path.get(path.size()-2);
+        path.remove(path.size()-1);
+      } else if (path.size() == 1) {
+        path.remove(path.size()-1);
+      }
+    } else {
+      if (nodes[srC].checkEdge(desC) && !visited[desC]) {
+        // move along one line
+        gradientLine( ( nodes[srC].getPoint() ).x, ( nodes[srC].getPoint() ).y,
+                ( nodes[desC].getPoint() ).x, ( nodes[desC].getPoint() ).y,
+                nodes[srC].getColor(), nodes[desC].getColor() );
+        nodes[desC].draw();
+        path.add(desC);
+        visited[desC] = true;
+        srC = desC;
+        desC = 0;
+      } else {
+        while( (!nodes[srC].checkEdge(desC) || visited[desC]) && desC < n ) {
+          // increment counter so next frame moves properly
+          desC++;
+        }
+      }
+    }
+  }
+/*
+              ### BREADTH FIRST SEARCH ###
+*/
+  if (BFS) {
     
   }
 }

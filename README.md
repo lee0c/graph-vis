@@ -16,4 +16,4 @@ POINT is a simple class with public variables. It holds a constructor and two in
 
 Branches:<br>
 MASTER currently has the capability to draw the graph, perform unweighted depth first search, or both.<br>
-WEIGHTED-DFS is in progress. When complete, it will perform Dijkstra's algorithm, using the length of lines as weights.
+WEIGHTED-DFS is in progress. When complete, it will choose which node to move to next by scanning line lengths (weights) instead of moving in order.

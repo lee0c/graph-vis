@@ -1,5 +1,5 @@
 int n = 100;     // n = |v|
-float p = .05;  // probability that any edge (u,v) exists
+float p = .5;  // probability that any edge (u,v) exists
 
 float p_0;      // initialization variables
 color c;
@@ -7,27 +7,31 @@ point coord;
 
 int desC = 0;  // counter so that the graph draws itself slowly over time
 int srC = 0;
-boolean drawn = false;
+boolean done = false;
 
 node [] nodes = new node[n];
 
-boolean drawGraph = false;
-boolean DFS = true;
+boolean drawGraph = true;
+boolean DFS = false;
+boolean DFS_UNWEIGHTED = false;
+boolean DFSSTART = true;
 boolean BFS = false;
+boolean BFSSTART = true;
 
 ArrayList<Integer> path = new ArrayList<Integer>();
 boolean [] visited = new boolean[n];
 
 void setup() {
-  size(800, 800);
+  size(1600, 800);
   background(0);
-  stroke(200);
-  fill(255);
+  stroke(180);
+  fill(200);
+  //strokeWeight(1);
   
   for (int i=0; i<n; i++) {
     c = color(int(random(50,256)), int(random(50,256)), int(random(50,256)));
     coord = new point( int(random(width)), int(random(height)) );
-    nodes[i] = new node(i, c, coord); // creates arraylist of nodes
+    nodes[i] = new node(i, c, coord, n); // creates arraylist of nodes
     visited[i] = false;
   }
   
@@ -36,34 +40,37 @@ void setup() {
       p_0 = random(0,1);
       if (p_0 < p) {
         nodes[i].addEdge(j);
+        nodes[i].addWeight( distance( nodes[i].getPoint(), nodes[j].getPoint() ), j);
+        
         nodes[j].addEdge(i); // if undirected
+        nodes[j].addWeight( distance( nodes[j].getPoint(), nodes[i].getPoint() ), i);        
       }  
     }
-  }
+  } 
 }
 
-void draw() { 
+void draw() {
 /*
-              ### DRAW GRAPH ###
+         ### DRAW GRAPH ###
 */
   if (drawGraph) {
-    if (desC < n && !drawn) {
+    if (desC < n && !done) {
       // drawing the nodes first loop through
       nodes[desC].draw();
       desC++;
     } else if (srC >= n) {
       drawGraph = false;
-      DFS = true;
-    } else if (desC < n && drawn) {
+      DFS = true;    
+    } else if (desC < n && done) {
       // changing the destination node
-      if (nodes[srC].checkEdge(desC)) {
+      if (nodes[srC].checkEdge(desC)) {        
         gradientLine( ( nodes[srC].getPoint() ).x, ( nodes[srC].getPoint() ).y,
                 ( nodes[desC].getPoint() ).x, ( nodes[desC].getPoint() ).y,
                 nodes[srC].getColor(), nodes[desC].getColor() );
-        
+                
         desC++;
       } else {
-        // incrementing the counter so one line is drawn per frame
+        // incrememting the counter so one line is drawn per frame
         while (!nodes[srC].checkEdge(desC) && desC < n) {
           desC++;
         }
@@ -71,28 +78,36 @@ void draw() {
     } else if (desC == n) {
       // changing the source node
       srC++;
-      if (!drawn) {
-        drawn = true;
+      if (!done) {
+        done = true;
         srC = 0;
       }
       desC = srC + 1;
     }
   }
-/*
-              ### DEPTH FIRST SEARCH ###
+/* 
+         ### DEPTH FIRST SEARCH ###
 */
-  if (DFS) {
+  if (DFS_UNWEIGHTED) {
     if (DFSSTART) {
       stroke(0, 0, 0, 180);
       fill(0, 0, 0, 180);
       rect(0, 0, width, height);
+      frameRate(5);
       DFSSTART = false;
+      done = false;
     }
-    if (path.size() == 0) {
+    if (done) {
+      stroke(255, 0, 0);
+      fill(255, 0, 0);
+      ellipse(width-20, height-20, 10, 10);
+    } else if (path.size() == 0) {
       // starting the path (either first time initialization or moving to a new connected component)
+      done = true;
       for (int i=0; i<n; i++) {
         if (visited[i] == false) {
           srC = i;
+          done = false;
         }
       }
       desC = 0;
@@ -104,10 +119,8 @@ void draw() {
       if (path.size() >= 2) {
         desC = 0;
         srC = path.get(path.size()-2);
-        path.remove(path.size()-1);
-      } else if (path.size() == 1) {
-        path.remove(path.size()-1);
       }
+      path.remove(path.size()-1);
     } else {
       if (nodes[srC].checkEdge(desC) && !visited[desC]) {
         // move along one line
@@ -127,9 +140,65 @@ void draw() {
       }
     }
   }
+  if (DFS) {
+    if (DFSSTART) {
+      stroke(0, 0, 0, 180);
+      fill(0, 0, 0, 180);
+      rect(0, 0, width, height);
+      frameRate(5);
+      DFSSTART = false;
+      done = false;
+    }
+    if (done) {
+      stroke(255, 0, 0);
+      fill(255, 0, 0);
+      ellipse(width-20, height-20, 10, 10);
+    } else if (path.size() == 0) {
+      // starting the path (either first time initialization or moving to a new connected component)
+      done = true;
+      for (int i=0; i<n; i++) {
+        if (visited[i] == false) {
+          srC = i;
+          done = false;
+        }
+      }
+      path.add(srC);
+      visited[srC] = true;
+      nodes[srC].draw();      
+    } else {
+      float min = width*height;
+      desC = n;
+      for (int i=0; i<n; i++) {
+        if (!visited[i] && nodes[srC].checkEdge(i)) {
+          if (nodes[srC].getWeight(i) < min) {
+            min = nodes[srC].getWeight(i);
+            desC = i;
+          }
+        }
+      }
+      
+      if (desC == n) {
+        // back up
+        if (path.size() > 1) {
+          srC = path.get(path.size()-2);
+        }
+        path.remove(path.size()-1);       
+      } else {
+        gradientLine( ( nodes[srC].getPoint() ).x, ( nodes[srC].getPoint() ).y,
+                ( nodes[desC].getPoint() ).x, ( nodes[desC].getPoint() ).y,
+                nodes[srC].getColor(), nodes[desC].getColor() );
+        srC = desC;
+        path.add(desC);
+        visited[desC] = true;
+        nodes[desC].draw();
+                
+      }
+    }
+  }
 /*
-              ### BREADTH FIRST SEARCH ###
-*/
+         ### BREADTH FIRST SEARCH ###
+*/      
+
   if (BFS) {
     
   }
@@ -143,4 +212,8 @@ void gradientLine(int x1, int y1, int x2, int y2, color a, color b) {
     fill(lerpColor(a, b, t));
     ellipse(x1+t*deltaX,  y1+t*deltaY, 1, 1);
   }
+}
+
+float distance(point a, point b) {
+  return abs( sqrt( sq(b.x-a.x) + sq(b.y-a.y) ) );
 }

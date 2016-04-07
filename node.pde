@@ -8,12 +8,19 @@ public class node {
   ArrayList<Integer> e; // list of destinations
   color c;              // color
   point p;              // coordinates
+  int n;                // number of nodes
+  float [] w;           // weights of connected verts
   
-  public node (int v, color c, point p) {
+  public node (int v, color c, point p, int n) {
     this.v = v;
     this.e = new ArrayList<Integer>();
     this.c = c;
     this.p = p;
+    this.n = n;
+    this.w = new float[n];
+    for (int i=0; i<n; i++) {
+      w[i] = 0;
+    }
   }
   
   public void addEdge(int dest) {
@@ -35,6 +42,14 @@ public class node {
   
   public color getColor() {
     return c;
+  }
+  
+  public void addWeight(float weight, int dest) {
+    w[dest] = weight;
+  }
+  
+  public float getWeight(int dest) {
+    return w[dest];
   }
   
   public void setup() {
